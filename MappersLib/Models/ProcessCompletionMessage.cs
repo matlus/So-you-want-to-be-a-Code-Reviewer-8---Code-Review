@@ -1,6 +1,4 @@
-﻿
-using System.Runtime.ConstrainedExecution;
-using System.Threading;
+﻿using System.Threading;
 
 namespace WwwTC_SwitchCase
 {
