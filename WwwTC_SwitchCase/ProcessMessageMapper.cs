@@ -1,42 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.Text;
-using System.Text.Json;
 
 namespace WwwTC_SwitchCase
 {
     internal static class ProcessMessageMapper
     {
-        public static ProcessCompletionMessage MapToProcesMessagesToProcessCompletionMessage(string messageType, byte[] messageBody)
+        public static ProcessCompletionMessage MapToProcessCompletionMessage(string messageType, byte[] messageBody)
         {
-            if (messageType == "ProcessFinish" || messageType == "ProcessException")
+            if (messageType != "ProcessFinish" && messageType != "ProcessException")
             {
-                var completionMessage = DeserializeToCompletionMessage(messageType, messageBody);
-                Console.WriteLine(completionMessage);
+                return null;
             }
 
-            return null;
+            return DeserializeToCompletionMessage(messageType, messageBody);            
         }
 
         private static ProcessCompletionMessage DeserializeToCompletionMessage(string messageType, byte[] messageBody)
         {
-            ProcessCompletionMessage completionMessage = null;
+            var messageBodyJson = Encoding.UTF8.GetString(messageBody);
 
             switch (messageType)
             {
                 case "ProcessFinish":
-                    var processFinish = JsonSerializer.Deserialize<ProcessStartFinishMessage>(messageBody);
-                    completionMessage = new ProcessCompletionMessage(processFinish.MessageId, processFinish.ApplicationName);
-                    break;
-                case "ProcessException":
-                    var processException = JsonSerializer.Deserialize<ProcessExceptionMessage>(messageBody);
-                    completionMessage = new ProcessCompletionMessage(processException.MessageId, processException.ApplicationName);
-                    break;
+                    var processStartFinishMessage = JsonConvert.DeserializeObject<ProcessStartFinishMessage>(messageBodyJson);
+                    return new ProcessCompletionMessage(processStartFinishMessage.MessageId, processStartFinishMessage.ApplicationName);
                 default:
-                    break;
+                    var processExceptionMessage = JsonConvert.DeserializeObject<ProcessExceptionMessage>(messageBodyJson);
+                    return new ProcessCompletionMessage(processExceptionMessage.MessageId, processExceptionMessage.ApplicationName);
             }
-
-            return completionMessage;
         }
+
+        ////private static ProcessCompletionMessage DeserializeToCompletionMessage(string messageType, byte[] messageBody)
+        ////{
+        ////    ProcessCompletionMessage completionMessage = null;
+        ////
+        ////    switch (messageType)
+        ////    {
+        ////        case "ProcessFinish":
+        ////            var processFinish = JsonConvert.DeserializeObject<ProcessStartFinishMessage>(Encoding.UTF8.GetString(messageBody));
+        ////            completionMessage = new ProcessCompletionMessage(processFinish.MessageId, processFinish.ApplicationName);
+        ////            break;
+        ////        case "ProcessException":
+        ////            var processException = JsonConvert.DeserializeObject<ProcessExceptionMessage>(Encoding.UTF8.GetString(messageBody));
+        ////            completionMessage = new ProcessCompletionMessage(processException.MessageId, processException.ApplicationName);
+        ////            break;
+        ////        default:
+        ////            break;
+        ////    }
+
+        ////    return completionMessage;
+        ////}
     }
 }
